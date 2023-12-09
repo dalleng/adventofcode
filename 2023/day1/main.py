@@ -12,7 +12,7 @@ NUMBERS = (
 LOOKUP = dict(zip(NUMBERS, list(range(1, 10))))
 
 
-def get_digits(line, written=False):
+def extract_number(line, written=False):
     if not written:
         digits = [i for i in line if i.isdigit()]
     else:
@@ -20,27 +20,22 @@ def get_digits(line, written=False):
         start = 0
         end = 0
         while end < len(line):
-            if start == end and line[end].isdigit():
+            if line[start].isdigit():
                 digits.append(int(line[end]))
-                end += 1
                 start += 1
+                end = start
                 continue
 
-            # the shortest number has at least 3 letters
             length = end - start + 1
-            if length >= 2 and length <= 5:
-                potential = line[start:end+1]
-                if potential in NUMBERS:
-                    digits.append(LOOKUP[potential])
-                    start = end
-                    continue
-                elif length == 5 or end == len(line) - 1:
-                    start += 1
-                    end = start
-                    continue
-            # the largest option has 5 characters
-            elif length > 5:
+            potential = line[start:end+1]
+
+            if potential in NUMBERS:
+                digits.append(LOOKUP[potential])
                 start = end
+                continue
+            elif length == 5 or end == len(line) - 1:
+                start += 1
+                end = start
                 continue
 
             end += 1
@@ -56,34 +51,34 @@ def main():
     with open('input.txt') as f:
         for line in f:
             line = line.strip()
-            s1 += get_digits(line)
-            s2 += get_digits(line, written=True)
+            s1 += extract_number(line)
+            s2 += extract_number(line, written=True)
     print(f"{s1=}")
     print(f"{s2=}")
 
 
 def test():
     # part1
-    assert get_digits("1abc2") == 12
-    assert get_digits("pqr3stu8vwx") == 38
-    assert get_digits("a1b2c3d4e5f") == 15
-    assert get_digits("treb7uchet") == 77
+    assert extract_number("1abc2") == 12
+    assert extract_number("pqr3stu8vwx") == 38
+    assert extract_number("a1b2c3d4e5f") == 15
+    assert extract_number("treb7uchet") == 77
     # part 2
-    assert get_digits('oneight', written=True) == 18
-    assert get_digits('oneightsix', written=True) == 16
-    assert get_digits('2oneightsix', written=True) == 26
-    assert get_digits('2oneightsix9', written=True) == 29
-    assert get_digits('foone', written=True) == 11
-    assert get_digits("two1nine", written=True) == 29
-    assert get_digits("eightwothree", written=True) == 83
-    assert get_digits("abcone2threexyz", written=True) == 13
-    assert get_digits("xtwone3four", written=True) == 24
-    assert get_digits("4nineeightseven2", written=True) == 42
-    assert get_digits("zoneight234", written=True) == 14
-    assert get_digits("7pqrstsixteen", written=True) == 76
-    assert get_digits("foooneight", written=True) == 18
+    assert extract_number('oneight', written=True) == 18
+    assert extract_number('oneightsix', written=True) == 16
+    assert extract_number('2oneightsix', written=True) == 26
+    assert extract_number('2oneightsix9', written=True) == 29
+    assert extract_number('foone', written=True) == 11
+    assert extract_number("two1nine", written=True) == 29
+    assert extract_number("eightwothree", written=True) == 83
+    assert extract_number("abcone2threexyz", written=True) == 13
+    assert extract_number("xtwone3four", written=True) == 24
+    assert extract_number("4nineeightseven2", written=True) == 42
+    assert extract_number("zoneight234", written=True) == 14
+    assert extract_number("7pqrstsixteen", written=True) == 76
+    assert extract_number("foooneight", written=True) == 18
 
 
 if __name__ == '__main__':
-    # test()
+    test()
     main()
