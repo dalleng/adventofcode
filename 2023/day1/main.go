@@ -16,6 +16,8 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
+    
+    defer f.Close()
 
     var sum1, sum2 int64;
     scanner := bufio.NewScanner(f)
