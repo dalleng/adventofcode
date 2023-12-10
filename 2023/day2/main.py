@@ -3,12 +3,16 @@ import re
 
 def main():
     gid_sum = 0
+    power_sum = 0
     with open('input.txt') as f:
         for line in f:
             gid, sets = parse_game(line)
+            min_game = get_minimum_set(sets)
+            power_sum += min_game['red'] * min_game['green'] * min_game['blue']
             if is_game_valid(sets):
                 gid_sum += gid
     print(f"{gid_sum=}")
+    print(f"{power_sum=}")
 
 
 def parse_game(line):
@@ -32,6 +36,15 @@ def is_game_valid(sets):
 def is_set_valid(gameset):
     max_values = {'red': 12, 'green': 13, 'blue': 14}
     return all((n <= max_values[color] for color, n in gameset.items()))
+
+
+def get_minimum_set(sets):
+    max_values = {'red': 0, 'green': 0, 'blue': 0}
+    for gameset in sets:
+        for color, n in gameset.items():
+            if n > max_values[color]:
+                max_values[color] = n
+    return max_values
 
 
 if __name__ == '__main__':
