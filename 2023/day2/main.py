@@ -49,4 +49,3 @@ def get_minimum_set(sets):
 
 if __name__ == '__main__':
     main()
-    # print(parse_game("Game 10: 2 green, 3 red; 18 blue, 20 green, 9 red; 7 red, 9 blue, 17 green")) # noqa
