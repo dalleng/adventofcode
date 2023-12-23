@@ -28,33 +28,42 @@ func main() {
         log.Fatal(err)
     }
 
+    gears := map[[2]int][]int{}
     sum := 0
     for i := 0; i < len(schematic); i++ {
-        parts := numberPartsInLine(schematic, i)
+        parts := numberPartsInLine(schematic, i, gears)
         for _, part := range parts {
             sum += part
         }
     }
-    fmt.Printf("sum: %d", sum)
+
+    sum2 := 0
+    for _, value := range gears {
+        if len(value) == 2 {
+            sum2 += value[0] * value[1]
+        }
+    }
+
+    fmt.Println("sum:", sum)
+    fmt.Println("sum2:", sum2)
 }
 
-func numberPartsInLine(schematic []string, row int) []int {
+func numberPartsInLine(schematic []string, row int, gears map[[2]int][]int) []int {
     parts := []int{}
     line := []byte(schematic[row])
     pattern := regexp.MustCompile(`(\d+)`)
     allIndexes := pattern.FindAllSubmatchIndex(line, -1)
     for _, loc := range allIndexes {
-        if isPart := isPartNumber(schematic, row, loc); isPart {
+        if isPart := isPartNumber(schematic, row, loc, gears); isPart {
             n, _ := strconv.Atoi(schematic[row][loc[0]:loc[1]])
             parts = append(parts, n)
         }
     }
-    fmt.Println(parts)
     return parts
 }
 
-func isPartNumber(schematic []string, row int, loc []int) bool {
-    fmt.Println(schematic[row])
+func isPartNumber(schematic []string, row int, loc []int, gears map[[2]int][]int) bool {
+    foundPartNumber := false
 
     startCol, endCol := loc[0], loc[1]
 
@@ -77,17 +86,26 @@ func isPartNumber(schematic []string, row int, loc []int) bool {
         endCol -= 1
     }
 
-    fmt.Printf("startRow: %d endRow: %d startCol: %d endCol: %d\n", startRow, endRow, startCol, endCol)
 
     for i := startRow; i <= endRow; i++ {
         for j := startCol; j <= endCol; j++ {
-            if currentChar := schematic[i][j]; !unicode.IsDigit(rune(currentChar)) && currentChar != '.' {
-                return true
+            currentChar := schematic[i][j]
+            if !unicode.IsDigit(rune(currentChar)) && currentChar != '.' {
+                foundPartNumber = true
+            }
+            if currentChar == '*' {
+                n, _ := strconv.Atoi(schematic[row][loc[0]:loc[1]])
+                key := [2]int{i, j}
+                if value, ok := gears[key]; ok {
+                    gears[key] = append(value, n)
+                } else {
+                    gears[key] = []int{n}
+                }
             }
         }
     }
 
-    return false
+    return foundPartNumber
 }
 
 
