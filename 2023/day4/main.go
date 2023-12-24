@@ -13,25 +13,44 @@ import (
 
 func main() {
     f, err := os.Open("input.txt")
+
     if err != nil {
         log.Fatal(err)
     }
-    scanner := bufio.NewScanner(f)
 
+    scanner := bufio.NewScanner(f)
+    counter := map[int]int{}
+
+    i := 1
     s := 0
+
     for scanner.Scan() {
+        counter[i] += 1
+
         line := scanner.Text()
         numbers := extractNumbers(line)
         winning, own := numbers[0], numbers[1]
         count := getIntersectionCount(winning, own)
         s += int(math.Pow(2, float64(count-1)))
+
+        for j := 1; j <= count; j++ {
+            counter[i+j] += 1 * counter[i]
+        }
+
+        i++
     }
 
     if err := scanner.Err(); err != nil {
         log.Fatal(err)
     }
 
-    log.Print("result: ", s)
+    log.Print("s1: ", s)
+
+    s2 := 0
+    for _, value := range counter {
+        s2 += value
+    }
+    log.Print("s2: ", s2)
 }
 
 
