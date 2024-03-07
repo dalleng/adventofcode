@@ -8,11 +8,9 @@ class RangeMap:
 
     def __getitem__(self, key: int) -> int:
         i = bisect.bisect(self.range_list, key, key=lambda x: x[0])
-        if i == 0:
-            return key
-        else:
+        if i:
             source, destination, size = self.range_list[i-1]
-            if key >= source and key < source + size:
+            if source <= key and key < source + size:
                 return key - source + destination
         return key
 
