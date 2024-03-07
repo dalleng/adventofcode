@@ -70,7 +70,7 @@ class RangeToRangeMap:
             except IndexError:
                 has_previous = False
 
-            if has_previous and range_start >= source and range_start < source + size:
+            if has_previous and source <= range_start < source + size:
                 range_consumed = min(
                     size - (range_start - source), range_size
                 )
@@ -87,7 +87,8 @@ class RangeToRangeMap:
                 except IndexError:
                     has_next = False
 
-                if has_next and range_start + range_size - 1 >= source and range_start + range_size - 1 < source + size:
+                range_end = range_start + range_size - 1
+                if has_next and source <= range_end < source + size:
                     range_consumed = source - range_start
                     output_range.append((range_start, range_consumed))
                     range_start += range_consumed
@@ -160,7 +161,7 @@ def parse_input2(input_file):
 
 
 def part1():
-    seed_numbers, range_maps = parse_input("input.txt")
+    seed_numbers, range_maps = parse_input("./input.txt")
     locations = []
     for seed in seed_numbers:
         current = seed
@@ -169,11 +170,12 @@ def part1():
         locations.append(current)
     # print(f"{locations=}")
     s1 = min(locations)
+    assert s1 == 382895070
     print(f"{s1=}")
 
 
 def part2():
-    seed_and_ranges, range_maps = parse_input2("input.txt")
+    seed_and_ranges, range_maps = parse_input2("./input.txt")
     location_ranges = []
     new_ranges = []
 
@@ -192,6 +194,7 @@ def part2():
 
     # print(f"{location_ranges=}")
     s2 = min(location_ranges, key=lambda x: x[0])[0]
+    assert s2 == 17729182
     print(f"{s2=}")
 
 
