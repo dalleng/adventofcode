@@ -4,9 +4,41 @@ import bisect
 
 class RangeMap:
     def __init__(self, range_list):
+        """
+        A data structure for mapping integer values from one range to another
+        based on a list of tuples defining the input and output ranges
+        and their sizes.
+
+        Each tuple in the range list should have the following format:
+        (input_range_start, output_range_start, range_size)
+
+        Example:
+            >>> range_mappings = [(98, 50, 2), (200, 100, 4)]
+            >>> rm = RangeMap(range_mappings)
+            >>> rm[98]
+            50
+            >>> rm[99]
+            51
+            >>> rm[200]
+            100
+            >>> rm[202]
+            102
+            >>> rm[10]  # Example of a key not within any defined range
+            10
+        """
         self.range_list = sorted(range_list)
 
     def __getitem__(self, key: int) -> int:
+        """
+        Retrieves the mapped value for a given key based on the defined
+        range mappings.
+
+        This method uses binary search to efficiently find the mapping
+        for the key, if it exists. If the key falls within one of the
+        defined input ranges, it returns the corresponding value in the mapped
+        output range. If the key does not fall within any defined ranges,
+        it returns the key itself.
+        """
         i = bisect.bisect(self.range_list, key, key=lambda x: x[0])
         if i:
             source, destination, size = self.range_list[i-1]
@@ -22,7 +54,8 @@ class RangeToRangeMap:
     def __getitem__(self, key: slice) -> list[tuple[int, int]]:
         if not isinstance(key, slice):
             raise ValueError(
-                "This data structure only supports slices. E.g: instance[start:range_len]."
+                "This data structure only supports slices."
+                " E.g: instance[start:range_len]."
             )
 
         output_range = []
