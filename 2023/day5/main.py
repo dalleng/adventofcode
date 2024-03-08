@@ -49,6 +49,19 @@ class RangeMap:
 
 class RangeToRangeMap:
     def __init__(self, range_list):
+        """
+        Maps ranges to ranges.
+
+        Examples:
+        >> rrm = RangeToRangeMap([(98, 50, 2), (50, 52, 48)])
+        >> assert rrm[79:14] == [(81, 14)] # Map the range starting in 79 with length 14
+
+        >> rrm = RangeToRangeMap([(98, 50, 2), (79, 50, 7), (86, 57, 7)])
+        >> assert rrm[79:14] == [(50, 7), (57, 7)]
+
+        >> rrm = RangeToRangeMap([(98, 50, 2)])
+        >> assert rrm[79:14] == [(79, 14)] # if there's no range that matches return the input range
+        """
         self.range_list = sorted(range_list)
 
     def __getitem__(self, key: slice) -> list[tuple[int, int]]:
