@@ -113,7 +113,7 @@ class RangeToRangeMap:
         return output_range
 
 
-def parse_input(input_file):
+def parse_input(input_file, range_map_cls=RangeMap):
     with open(input_file) as f:
         seeds = next(f)
         _, seed_numbers = seeds.split('seeds: ')
@@ -128,7 +128,7 @@ def parse_input(input_file):
             m = re.match(r'([a-z]+)-to-([a-z]+)', line)
             if m:
                 if range_list:
-                    d = RangeMap(range_list)
+                    d = range_map_cls(range_list)
                     range_maps.append(d)
                     range_list = []
 
@@ -137,37 +137,7 @@ def parse_input(input_file):
                 destination, source, size = m.groups()
                 range_list.append((int(source), int(destination), int(size)))
 
-        d = RangeMap(range_list)
-        range_maps.append(d)
-
-    return seed_numbers, range_maps
-
-
-def parse_input2(input_file):
-    with open(input_file) as f:
-        seeds = next(f)
-        _, seed_numbers = seeds.split('seeds: ')
-        seed_numbers = [int(s) for s in seed_numbers.split(' ')]
-
-        range_maps = []
-        range_list = []
-        for line in f:
-            if not f:
-                continue
-
-            m = re.match(r'([a-z]+)-to-([a-z]+)', line)
-            if m:
-                if range_list:
-                    d = RangeToRangeMap(range_list)
-                    range_maps.append(d)
-                    range_list = []
-
-            m = re.match(r'(\d+) (\d+) (\d+)', line)
-            if m:
-                destination, source, size = m.groups()
-                range_list.append((int(source), int(destination), int(size)))
-
-        d = RangeToRangeMap(range_list)
+        d = range_map_cls(range_list)
         range_maps.append(d)
 
     return seed_numbers, range_maps
@@ -188,7 +158,9 @@ def part1():
 
 
 def part2():
-    seed_and_ranges, range_maps = parse_input2("./input.txt")
+    seed_and_ranges, range_maps = parse_input(
+        "./input.txt", range_map_cls=RangeToRangeMap
+    )
     location_ranges = []
     new_ranges = []
 
