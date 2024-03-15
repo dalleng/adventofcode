@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -27,19 +28,41 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	// solution part 1
 	s1 := 1
 	for i := 0; i < len(timesAndDistances[0]); i++ {
 		time := timesAndDistances[0][i]
 		distance := timesAndDistances[1][i]
 		speed := calculateSpeed(float64(time), float64(distance))
-		s1 *= numberOfWaysToBeat(time, distance, int(speed)+1)
+		s1 *= numberOfWaysToBeat(time, distance, speed)
 	}
-	fmt.Printf("s1=%d", s1)
+	fmt.Printf("s1=%d\n", s1)
+
+	// solution part 2
+	var b strings.Builder
+	for _, n := range timesAndDistances[0] {
+		fmt.Fprintf(&b, "%d", n)
+	}
+	time2, err := strconv.Atoi(b.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+	b.Reset()
+	for _, n := range timesAndDistances[1] {
+		fmt.Fprintf(&b, "%d", n)
+	}
+	distance2, err := strconv.Atoi(b.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+	speed2 := calculateSpeed(float64(time2), float64(distance2))
+	fmt.Printf("s2=%d", numberOfWaysToBeat(time2, distance2, speed2))
 }
 
-func numberOfWaysToBeat(time int, distanceToBeat int, speedOfCurrentRecord int) int {
+func numberOfWaysToBeat(time int, distanceToBeat int, speedOfCurrentRecord float64) int {
 	count := 0
-	for i := speedOfCurrentRecord; i <= time/2; i++ {
+	for i := int(speedOfCurrentRecord) + 1; i <= time/2; i++ {
 		currentDistance := i * (time - i)
 		if currentDistance > distanceToBeat {
 			if time-i != i {
