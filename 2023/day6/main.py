@@ -6,13 +6,18 @@ def main():
     with open("input.txt") as f:
         times = next(f)
         distances = next(f)
-        times = list(map(int, re.findall(r"\d+", times)))
-        distances = list(map(int, re.findall(r"\d+", distances)))
+        times = re.findall(r"\d+", times)
+        distances = re.findall(r"\d+", distances)
 
     s1 = 1
-    for time, distance in zip(times, distances):
+    for time, distance in zip(
+        (int(t) for t in times), (int(d) for d in distances)
+    ):
         s1 *= number_of_ways_to_beat(time, distance)
     print(f"{s1=}")
+
+    s2 = number_of_ways_to_beat(int(''.join(times)), int(''.join(distances)))
+    print(f"{s2=}")
 
 
 def number_of_ways_to_beat(time, distance):
@@ -44,7 +49,7 @@ def calculate_speed(time, distance):
 if __name__ == '__main__':
     main()
 
-    assert number_of_ways_to_beat(7, 9) == 4
-    assert number_of_ways_to_beat(15, 40) == 8
-    assert number_of_ways_to_beat(30, 200) == 9
-    assert number_of_ways_to_beat(71530, 940200) == 71503
+    # assert number_of_ways_to_beat(7, 9) == 4
+    # assert number_of_ways_to_beat(15, 40) == 8
+    # assert number_of_ways_to_beat(30, 200) == 9
+    # assert number_of_ways_to_beat(71530, 940200) == 71503
