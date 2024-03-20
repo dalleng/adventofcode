@@ -41,18 +41,49 @@ func getCardsValue(h Hand, labelToValue map[rune]int) int {
 	return value
 }
 
-func getHandValue(h Hand, labels []rune) int {
+func replaceJokers(cards string, defaultReplacement rune) string {
+	/*
+		Find if there are 'J's among the cards and replace them with the best option
+	*/
+
+	if cards == "JJJJJ" {
+		return strings.ReplaceAll(cards, "J", string(defaultReplacement))
+	}
+
+	// Find the most used label
+	counter := countRunes(cards)
+	max := -1
+	var labelReplacement rune
+	for label, count := range counter {
+		if label != 'J' && count > max {
+			labelReplacement = label
+			max = count
+		}
+	}
+
+	if labelReplacement != 0 {
+		return strings.ReplaceAll(cards, "J", string(labelReplacement))
+	}
+
+	return cards
+}
+
+func getHandValue(h Hand, labels []rune, shouldReplaceJokers bool) int {
 	labelToValue := make(map[rune]int)
 	for i, l := range labels {
 		labelToValue[l] = i
 	}
 
 	cardsValue := getCardsValue(h, labelToValue)
-	cardCounter := countRunes(h.Cards)
 
-	var handType int
+	cards := h.Cards
+	if shouldReplaceJokers {
+		cards = replaceJokers(cards, labels[1])
+	}
+	cardCounter := countRunes(cards)
 	lenCardCounter := len(cardCounter)
 
+	var handType int
 	if lenCardCounter == 1 {
 		handType = 6
 	} else if lenCardCounter == 2 {
@@ -111,7 +142,7 @@ func main() {
 
 	cardLabels := [13]rune{'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
 	slices.SortFunc(hands, func(a, b Hand) int {
-		return cmp.Compare(getHandValue(a, cardLabels[:]), getHandValue(b, cardLabels[:]))
+		return cmp.Compare(getHandValue(a, cardLabels[:], false), getHandValue(b, cardLabels[:], false))
 	})
 
 	s1 := 0
@@ -119,4 +150,21 @@ func main() {
 		s1 += h.Bid * (i + 1)
 	}
 	fmt.Println("s1:", s1)
+
+	cardLabelsWithJoker := [13]rune{'J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A'}
+	slices.SortFunc(hands, func(a, b Hand) int {
+		return cmp.Compare(getHandValue(a, cardLabelsWithJoker[:], true), getHandValue(b, cardLabelsWithJoker[:], true))
+	})
+
+	s2 := 0
+	for i, h := range hands {
+		s2 += h.Bid * (i + 1)
+	}
+	fmt.Println("s2:", s2)
+
+	// fmt.Println(replaceJokers("23456", '3')) // "23456"
+	// fmt.Println(replaceJokers("KTJJT", '3')) // "KTTTT"
+	// fmt.Println(replaceJokers("2345J", '3')) // "23455"
+	// fmt.Println(replaceJokers("JJJJJ", '2')) // "22222"
+	// fmt.Println(replaceJokers("JJJJJ", '3')) // "33333"
 }
