@@ -1,15 +1,17 @@
+import math
 import re
+from typing import Callable
 
 
 def get_path_length(
         map: dict[str, tuple[str, str]],
         movements: list[str],
         origin: str = 'AAA',
-        destination: str = 'ZZZ'
+        is_destination_fn: Callable[[str], bool] = lambda x: x == "ZZZ",
 ):
     current_position = origin
     steps = 0
-    while current_position != destination:
+    while not is_destination_fn(current_position):
         for mov in movements:
             direction = 0 if mov == "L" else 1
             current_position = map[current_position][direction]
@@ -36,13 +38,21 @@ def main():
     assert s1 == 15989
     print(f"{s1=}")
 
-    # ending_positions = {key for key in map.keys() if key[2] == "Z"}
-    # print(f"{ending_positions=}")
-    # print(f"{len(set(map.keys()))=}")
-    # print(f"{len(list(map.keys()))=}")
+    starting_positions = [pos for pos in map.keys() if pos[2] == 'A']
+    path_lengths = []
 
-    # final_positions = build_final_positions_map(map, movements)
-    # print(f"s2={get_path_length2(final_positions, movements)}")
+    for pos in starting_positions:
+        pl = get_path_length(
+            map, movements, origin=pos, is_destination_fn=lambda x: x[2] == 'Z'
+        )
+        path_lengths.append(pl)
+
+    # Find the lowest common multiple of all the path lengths
+    # of starting positions to positions ending with 'Z'
+    print(f"{path_lengths=}")
+    s2 = math.lcm(*path_lengths)
+    assert s2 == 13830919117339
+    print(f"{s2=}")
 
 
 if __name__ == "__main__":
