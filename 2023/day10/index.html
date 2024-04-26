@@ -1,0 +1,104 @@
+<html>
+    <body>
+        <script>
+            const CELL_SIZE = 50
+            function drawCell(ctx, x, y, value) {
+                ctx.strokeStyle = "red"
+                switch (value) {
+                    case '.':
+                        const rectSize = 5;
+                        ctx.fillRect(x + CELL_SIZE / 2 - rectSize / 2, y + CELL_SIZE / 2 - rectSize / 2, rectSize, rectSize);
+                        break;
+                    case 'S':
+                        ctx.font = `${CELL_SIZE*0.5}px serif`;
+                        ctx.fillText('S', x + CELL_SIZE / 2, y + CELL_SIZE - 10);
+                        break;
+                    case '-':
+                        ctx.beginPath();
+                        ctx.moveTo(x, y + CELL_SIZE / 2);
+                        ctx.lineTo(x + CELL_SIZE, y + CELL_SIZE / 2);
+                        ctx.stroke();
+                        break;
+                    case '|':
+                        ctx.beginPath();
+                        ctx.moveTo(x + CELL_SIZE / 2, y);
+                        ctx.lineTo(x + CELL_SIZE / 2, y + CELL_SIZE);
+                        ctx.stroke();
+                        break;
+                    case 'L':
+                        ctx.beginPath();
+                        ctx.moveTo(x + CELL_SIZE / 2, y);
+                        ctx.arcTo(
+                            x + CELL_SIZE / 2,
+                            y + CELL_SIZE / 2,
+                            x + CELL_SIZE,
+                            y + CELL_SIZE / 2,
+                            CELL_SIZE / 2);
+                        ctx.stroke();
+                        break;
+                    case 'J':
+                        ctx.beginPath();
+                        ctx.moveTo(x + CELL_SIZE / 2, y);
+                        ctx.arcTo(
+                            x + CELL_SIZE / 2,
+                            y + CELL_SIZE / 2,
+                            x,
+                            y + CELL_SIZE / 2,
+                            CELL_SIZE / 2);
+                        ctx.stroke();
+                        break;
+                    case '7':
+                        ctx.beginPath();
+                        ctx.moveTo(x, y + CELL_SIZE / 2);
+                        ctx.arcTo(
+                            x + CELL_SIZE / 2,
+                            y + CELL_SIZE / 2,
+                            x + CELL_SIZE / 2,
+                            y + CELL_SIZE,
+                            CELL_SIZE / 2);
+                        ctx.stroke();
+                        break;
+                    case 'F':
+                        ctx.beginPath();
+                        ctx.moveTo(x + CELL_SIZE / 2, y + CELL_SIZE);
+                        ctx.arcTo(
+                            x + CELL_SIZE / 2,
+                            y + CELL_SIZE / 2,
+                            x + CELL_SIZE,
+                            y + CELL_SIZE / 2,
+                            CELL_SIZE / 2);
+                        ctx.stroke();
+                        break;
+                }
+            }
+            function drawMaze(ctx, maze) {
+                for (i = 0; i < maze.length; i++) {
+                    for (j = 0; j < maze[0].length; j++) {
+                        // console.log("i: ", i);
+                        // console.log("j: ", j);
+                        const x = j*CELL_SIZE;
+                        const y = i*CELL_SIZE;
+                        // Draw cells in light gray
+                        ctx.strokeStyle = "rgb(133, 133, 133)"
+                        ctx.strokeRect(j*CELL_SIZE, i*CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                        drawCell(ctx, x, y, maze[i][j]);
+                    }
+                }
+            }
+            function draw() {
+                const canvas = document.querySelector("canvas");
+                const ctx = canvas.getContext("2d");
+                ctx.reset();
+                const maze = document.getElementById("maze").value;
+                drawMaze(ctx, maze.split('\n'))
+            }
+        </script>
+        <div>
+            <textarea id="maze" cols="10" rows="10"></textarea>
+            <button onclick="draw()">Draw Maze</button>
+        </div>
+        <div>
+            <canvas height="2000" width="2000"></canvas>
+        </div>
+    </body>
+</html>
