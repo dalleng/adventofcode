@@ -7,33 +7,41 @@ import (
 	"math"
 	"os"
 	"slices"
-	"strings"
 )
 
 func main() {
 	galaxyMap := readInput("input.txt")
-	// printMap(galaxyMap)
-	galaxyMap = addExpansions(galaxyMap)
-	// printMap(galaxyMap)
-
-	sum := 0
-	sum2 := 0
 	galaxies := findGalaxies(galaxyMap)
-	fmt.Println(galaxies)
-	fmt.Println(len(galaxies))
+	s1 := getSumOfAllShortestPaths(galaxyMap, galaxies, 2)
+	fmt.Println(s1)
+	s2 := getSumOfAllShortestPaths(galaxyMap, galaxies, 1000000)
+	fmt.Println(s2)
+}
 
+func getSumOfAllShortestPaths(galaxyMap [][]rune, galaxies [][2]int, expansionScale int) int {
+	rowsToExpand, colsToExpand := findRowsAndColsToExpand(galaxyMap)
+	sum := 0
 	for i := 0; i < len(galaxies); i++ {
 		for j := i + 1; j < len(galaxies); j++ {
-			sum2++
 			from := galaxies[i]
 			to := galaxies[j]
-			log.Printf("Distance between (%d, %d) and (%d, %d) is %d", from[0], from[1], to[0], to[1], int(math.Abs(float64(to[0]-from[0]))+math.Abs(float64(to[1]-from[1]))))
-			sum += int(math.Abs(float64(to[0]-from[0])) + math.Abs(float64(to[1]-from[1])))
+			for row := int(math.Min(float64(from[0]), float64(to[0]))); row < int(math.Max(float64(from[0]), float64(to[0]))); row++ {
+				if slices.Contains(rowsToExpand, row) {
+					sum += expansionScale
+				} else {
+					sum += 1
+				}
+			}
+			for col := int(math.Min(float64(from[1]), float64(to[1]))); col < int(math.Max(float64(from[1]), float64(to[1]))); col++ {
+				if slices.Contains(colsToExpand, col) {
+					sum += expansionScale
+				} else {
+					sum += 1
+				}
+			}
 		}
 	}
-
-	fmt.Println(sum)
-	fmt.Println(sum2)
+	return sum
 }
 
 func findGalaxies(galaxyMap [][]rune) [][2]int {
@@ -48,13 +56,7 @@ func findGalaxies(galaxyMap [][]rune) [][2]int {
 	return galaxies
 }
 
-func printMap(galaxyMap [][]rune) {
-	for _, line := range galaxyMap {
-		log.Println(string(line))
-	}
-}
-
-func addExpansions(galaxyMap [][]rune) [][]rune {
+func findRowsAndColsToExpand(galaxyMap [][]rune) ([]int, []int) {
 	// figure out which rows need to be expanded
 	rowsToExpand := make([]int, 0)
 	for i := 0; i < len(galaxyMap); i++ {
@@ -78,22 +80,7 @@ func addExpansions(galaxyMap [][]rune) [][]rune {
 			}
 		}
 	}
-
-	slices.Reverse(rowsToExpand)
-	for _, row := range rowsToExpand {
-		log.Printf("The row to expand is: %d\n", row)
-		galaxyMap = slices.Insert(galaxyMap, row, []rune(strings.Repeat(".", len(galaxyMap[0]))))
-	}
-
-	slices.Reverse(colsToExpand)
-	for _, col := range colsToExpand {
-		log.Printf("The col to expand is: %d\n", col)
-		for i := 0; i < len(galaxyMap); i++ {
-			galaxyMap[i] = slices.Insert(galaxyMap[i], col, '.')
-		}
-	}
-
-	return galaxyMap
+	return rowsToExpand, colsToExpand
 }
 
 func readInput(filepath string) [][]rune {
