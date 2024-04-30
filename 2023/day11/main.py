@@ -27,19 +27,33 @@ def main():
         for j in range(i+1, len(galaxies)):
             from_row, from_col = galaxies[i]
             to_row, to_col = galaxies[j]
-            distance = 0
             for row in range(min(from_row, to_row), max(from_row, to_row)):
                 if row in rows_to_expand:
-                    distance += 2
+                    sum += 2
                 else:
-                    distance += 1
+                    sum += 1
             for col in range(min(from_col, to_col), max(from_col, to_col)):
                 if col in cols_to_expand:
-                    distance += 2
+                    sum += 2
                 else:
-                    distance += 1
-            print("Distance between (%d, %d) and (%d, %d) is %d" % (from_row, from_col, to_row, to_col, distance))
-            sum += distance
+                    sum += 1
+    print(f"{sum=}")
+
+    sum = 0
+    for i in range(len(galaxies)):
+        for j in range(i+1, len(galaxies)):
+            from_row, from_col = galaxies[i]
+            to_row, to_col = galaxies[j]
+            for row in range(min(from_row, to_row), max(from_row, to_row)):
+                if row in rows_to_expand:
+                    sum += 1_000_000
+                else:
+                    sum += 1
+            for col in range(min(from_col, to_col), max(from_col, to_col)):
+                if col in cols_to_expand:
+                    sum += 1_000_000
+                else:
+                    sum += 1
 
     print(f"{sum=}")
 
