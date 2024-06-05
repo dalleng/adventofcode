@@ -1,5 +1,4 @@
-import re
-from typing import Generator
+from functools import cache
 
 
 def main():
@@ -7,20 +6,39 @@ def main():
     # print(f"{grid=}")
     # print(f"{counts=}")
 
-    total_count = 0
-    for i in range(len(grid)):
-        positions = get_unknown_positions(grid[i])
-        count = 0
-        # print(f"{grid[i]=}")
-        # print(f"{counts[i]=}")
-        for replacement in get_possible_replacements(grid[i], positions):
-            # print(f"{replacement=}")
-            if counts[i] == list(map(len, re.findall(r'#+', replacement))):
-                # print("found suitable replacement")
-                count += 1
-        total_count += count
+    s1 = 0
+    s2 = 0
 
-    print(f"{total_count=}")
+    for i in range(len(grid)):
+        s1 += count(grid[i], counts[i])
+        s2 += count('?'.join(grid[i] for _ in range(5)), counts[i] * 5)
+
+    print(f"{s1=}")
+    print(f"{s2=}")
+
+
+@cache
+def count(springs: str, counts: tuple[int, ...]) -> int:
+    if springs == "":
+        return 1 if counts == () else 0
+
+    if counts == ():
+        return 1 if "#" not in springs else 0
+
+    results = 0
+
+    if springs[0] in ".?":
+        results += count(springs[1:], counts)
+
+    if springs[0] in "?#":
+        if (
+            counts[0] <= len(springs)
+            and "." not in springs[: counts[0]]
+            and (len(springs) == counts[0] or springs[counts[0]] in ".?")
+        ):
+            results += count(springs[counts[0]+1:], counts[1:])
+
+    return results
 
 
 def read_input(filename):
@@ -28,31 +46,11 @@ def read_input(filename):
         grid = []
         counts = []
         for line in f:
-            row, g = line.split(" ")
+            row, c = line.split(" ")
             grid.append(row)
-            counts.append([int(i) for i in g.split(",")])
+            counts.append(tuple(map(int, c.split(","))))
+
     return grid, counts
-
-
-def get_unknown_positions(row: str):
-    positions = []
-    for i, c in enumerate(row):
-        if c == '?':
-            positions.append(i)
-    return positions
-
-
-def get_possible_replacements(row: str, positions: list[int]) -> Generator[str, None, None]:
-    to_process = [(row, positions)]
-    while to_process:
-        current_row, current_positions = to_process.pop()
-        if not current_positions:
-            yield current_row
-        else:
-            for c in (".", "#"):
-                pos = current_positions[0]
-                new_row = current_row[:pos] + c + current_row[pos+1:]
-                to_process.append((new_row, current_positions[1:]))
 
 
 if __name__ == "__main__":
