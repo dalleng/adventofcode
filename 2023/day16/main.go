@@ -37,6 +37,32 @@ func main() {
 	visited := traversal(board, Movement{Position: [2]int{0, 0}, Direction: RIGHT})
 	fmt.Printf("s1=%d\n", len(visited))
 
+	maxVisited := 0
+	// starting from all rows
+	for i := 0; i < len(board); i++ {
+		visited := traversal(board, Movement{Position: [2]int{i, 0}, Direction: RIGHT})
+		if len(visited) > maxVisited {
+			maxVisited = len(visited)
+		}
+		visited = traversal(board, Movement{Position: [2]int{i, len(board[0]) - 1}, Direction: LEFT})
+		if len(visited) > maxVisited {
+			maxVisited = len(visited)
+		}
+	}
+
+	// starting from all cols
+	for i := 0; i < len(board[0]); i++ {
+		visited := traversal(board, Movement{Position: [2]int{0, i}, Direction: DOWN})
+		if len(visited) > maxVisited {
+			maxVisited = len(visited)
+		}
+		visited = traversal(board, Movement{Position: [2]int{len(board) - 1, i}, Direction: UP})
+		if len(visited) > maxVisited {
+			maxVisited = len(visited)
+		}
+	}
+	fmt.Printf("s2=%d\n", maxVisited)
+
 }
 
 func getNextDirections(board [][]rune, current Movement) []Direction {
