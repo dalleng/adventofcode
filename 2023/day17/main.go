@@ -100,8 +100,11 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	_, cost := search(grid, Position{0, 0}, Position{len(grid) - 1, len(grid[0]) - 1})
-	fmt.Printf("s1=%d\n", cost)
+	_, s1 := search(grid, Position{0, 0}, Position{len(grid) - 1, len(grid[0]) - 1}, 0, 3)
+	fmt.Printf("s1=%d\n", s1)
+
+	_, s2 := search(grid, Position{0, 0}, Position{len(grid) - 1, len(grid[0]) - 1}, 4, 10)
+	fmt.Printf("s2=%d\n", s2)
 }
 
 func getPositionDiffForDirection(d Direction) Position {
@@ -138,7 +141,7 @@ func isPositionOutOfBounds(board [][]rune, p Position) bool {
 	return true
 }
 
-func getNextElements(board [][]rune, current QueueElement) []QueueElement {
+func getNextElements(board [][]rune, current QueueElement, movesBeforeTurning int, maxMovesInDirection int) []QueueElement {
 	nextElements := []QueueElement{}
 	for _, direction := range []Direction{UP, DOWN, LEFT, RIGHT} {
 		if direction == getOppositeDirection(current.Movement.Direction) {
@@ -147,21 +150,25 @@ func getNextElements(board [][]rune, current QueueElement) []QueueElement {
 
 		diff := getPositionDiffForDirection(direction)
 		newPosition := Position{current.Movement.Position[0] + diff[0], current.Movement.Position[1] + diff[1]}
+
 		if isPositionOutOfBounds(board, newPosition) {
 			continue
 		}
 
-		nextCost, _ := strconv.Atoi(string(board[newPosition[0]][newPosition[1]]))
 		newStepCounter := 1
-
 		if direction == current.Movement.Direction {
 			newStepCounter = current.Movement.StepsInCurrentDirection + 1
+		} else {
+			if current.Movement.StepsInCurrentDirection < movesBeforeTurning && current.Movement.Direction != STILL {
+				continue
+			}
 		}
 
-		if newStepCounter > 3 {
+		if newStepCounter > maxMovesInDirection {
 			continue
 		}
 
+		nextCost, _ := strconv.Atoi(string(board[newPosition[0]][newPosition[1]]))
 		nextElements = append(nextElements, QueueElement{
 			Cost: current.Cost + nextCost,
 			Movement: Movement{
@@ -174,7 +181,7 @@ func getNextElements(board [][]rune, current QueueElement) []QueueElement {
 	return nextElements
 }
 
-func search(board [][]rune, origin Position, destination Position) (Position, int) {
+func search(board [][]rune, origin Position, destination Position, movesBeforeTurning int, maxMovesInDirection int) (Position, int) {
 	frontier := &SearchQueue{}
 	seen := map[Movement]bool{}
 	heap.Init(frontier)
@@ -196,7 +203,7 @@ func search(board [][]rune, origin Position, destination Position) (Position, in
 			return current.(QueueElement).Movement.Position, current.(QueueElement).Cost
 		}
 
-		for _, nextElement := range getNextElements(board, current.(QueueElement)) {
+		for _, nextElement := range getNextElements(board, current.(QueueElement), movesBeforeTurning, maxMovesInDirection) {
 			if _, ok := seen[nextElement.Movement]; !ok {
 				heap.Push(frontier, nextElement)
 				seen[nextElement.Movement] = true
