@@ -11,6 +11,24 @@ import (
 	"strings"
 )
 
+type Rule struct {
+	Category           rune
+	ComparisonOperator rune
+	ComparisonValue    int
+	Target             string
+}
+
+func (r Rule) hasComparison() bool {
+	return r.Category != 0 && r.ComparisonOperator != 0 && r.ComparisonValue != 0
+}
+
+func (r Rule) String() string {
+	if !r.hasComparison() {
+		return r.Target
+	}
+	return fmt.Sprintf("%c%c%d:%s", r.Category, r.ComparisonOperator, r.ComparisonValue, r.Target)
+}
+
 func main() {
 	f, err := os.Open("input.txt")
 	// f, err := os.Open("example.txt")
@@ -20,7 +38,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	workflows := map[string][]string{}
+	workflows := map[string][]Rule{}
 	parts := []map[rune]int{}
 	scanner := bufio.NewScanner(f)
 	workflowSection := true
@@ -46,6 +64,7 @@ func main() {
 		}
 	}
 
+	// fmt.Println(workflows)
 	fmt.Printf("s1=%d\n", s1)
 
 	if err := scanner.Err(); err != nil {
@@ -61,45 +80,59 @@ func partsSum(part map[rune]int) int {
 	return sum
 }
 
-func isPartAccepted(workflows map[string][]string, part map[rune]int) bool {
+func isPartAccepted(workflows map[string][]Rule, part map[rune]int) bool {
 	fmt.Println("part: ", part)
 	currentWorkflow := "in"
-	re := regexp.MustCompile(`([xmas])([><])(\d+):(.*)`)
 	for !slices.Contains([]string{"A", "R"}, currentWorkflow) {
-		fmt.Println(currentWorkflow)
+		fmt.Println("currentWorkflow: ", currentWorkflow)
 		rules, _ := workflows[currentWorkflow]
 		for _, rule := range rules {
-			matches := re.FindStringSubmatch(rule)
-			if matches != nil {
-				category, comparison, numberStr, nextWorkflow := matches[1], matches[2], matches[3], matches[4]
-				ruleNumber, _ := strconv.Atoi(numberStr)
-				partNumber, _ := part[[]rune(category)[0]]
-				if comparison == "<" {
-					if partNumber < ruleNumber {
-						currentWorkflow = nextWorkflow
+			if rule.hasComparison() {
+				partNumber, _ := part[rule.Category]
+				if rule.ComparisonOperator == '<' {
+					if partNumber < rule.ComparisonValue {
+						currentWorkflow = rule.Target
 						break
 					}
 				} else {
-					if partNumber > ruleNumber {
-						currentWorkflow = nextWorkflow
+					if partNumber > rule.ComparisonValue {
+						currentWorkflow = rule.Target
 						break
 					}
 				}
 			} else {
-				currentWorkflow = rule
+				currentWorkflow = rule.Target
 			}
 		}
 	}
 	return currentWorkflow == "A"
 }
 
-func parseWorkflow(workflow string) (string, []string) {
+func parseRule(rawRule string) Rule {
+	re := regexp.MustCompile(`([xmas])([><])(\d+):(.*)`)
+	matches := re.FindStringSubmatch(rawRule)
+	if matches != nil {
+		category, comparison, numberStr, nextWorkflow := matches[1], matches[2], matches[3], matches[4]
+		value, _ := strconv.Atoi(numberStr)
+		return Rule{
+			Category:           rune(category[0]),
+			ComparisonOperator: rune(comparison[0]),
+			ComparisonValue:    value,
+			Target:             nextWorkflow,
+		}
+	}
+	return Rule{
+		Target: rawRule,
+	}
+}
+
+func parseWorkflow(workflow string) (string, []Rule) {
 	endOfNameIdx := strings.IndexRune(workflow, '{')
 	endOfRuleSection := strings.IndexRune(workflow, '}')
 	name := workflow[:endOfNameIdx]
-	rules := []string{}
+	rules := []Rule{}
 	for _, rule := range strings.Split(workflow[endOfNameIdx+1:endOfRuleSection], ",") {
-		rules = append(rules, rule)
+		rules = append(rules, parseRule(rule))
 	}
 	return name, rules
 }
