@@ -29,9 +29,30 @@ func (r Rule) String() string {
 	return fmt.Sprintf("%c%c%d:%s", r.Category, r.ComparisonOperator, r.ComparisonValue, r.Target)
 }
 
+type SearchNode struct {
+	WorkflowName string
+	Ranges       map[rune][2]int
+}
+
+func (s SearchNode) String() string {
+	rest := ""
+	for _, key := range [4]rune{'x', 'm', 'a', 's'} {
+		value, _ := s.Ranges[key]
+		rest += fmt.Sprintf("%c: [%d %d] ", key, value[0], value[1])
+	}
+	return fmt.Sprintf("WorkflowName: %s %s", s.WorkflowName, rest)
+}
+
+func (s SearchNode) CopyRanges() map[rune][2]int {
+	copyMap := make(map[rune][2]int)
+	for key, value := range s.Ranges {
+		copyMap[key] = value
+	}
+	return copyMap
+}
+
 func main() {
 	f, err := os.Open("input.txt")
-	// f, err := os.Open("example.txt")
 	defer f.Close()
 
 	if err != nil {
@@ -57,6 +78,10 @@ func main() {
 		}
 	}
 
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
 	s1 := 0
 	for _, part := range parts {
 		if isPartAccepted(workflows, part) {
@@ -64,11 +89,33 @@ func main() {
 		}
 	}
 
-	// fmt.Println(workflows)
 	fmt.Printf("s1=%d\n", s1)
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+	acceptedRanges := findAcceptedRanges(workflows)
+	// printAcceptedRanges(acceptedRanges)
+	s2 := 0
+	for _, ar := range acceptedRanges {
+		innersum := 0
+		for _, value := range ar {
+			if innersum == 0 {
+				innersum = value[1] - value[0] + 1
+			} else {
+				innersum *= value[1] - value[0] + 1
+			}
+		}
+		s2 += innersum
+	}
+	fmt.Printf("s2=%d\n", s2)
+}
+
+func printAcceptedRanges(acceptedRanges []map[rune][2]int) {
+	for _, ar := range acceptedRanges {
+		s := ""
+		for _, key := range [4]rune{'x', 'm', 'a', 's'} {
+			value, _ := ar[key]
+			s += fmt.Sprintf("%c: [%d %d] ", key, value[0], value[1])
+		}
+		fmt.Println(s)
 	}
 }
 
@@ -81,31 +128,29 @@ func partsSum(part map[rune]int) int {
 }
 
 func isPartAccepted(workflows map[string][]Rule, part map[rune]int) bool {
-	fmt.Println("part: ", part)
-	currentWorkflow := "in"
-	for !slices.Contains([]string{"A", "R"}, currentWorkflow) {
-		fmt.Println("currentWorkflow: ", currentWorkflow)
-		rules, _ := workflows[currentWorkflow]
+	WorkflowName := "in"
+	for !slices.Contains([]string{"A", "R"}, WorkflowName) {
+		rules, _ := workflows[WorkflowName]
 		for _, rule := range rules {
 			if rule.hasComparison() {
 				partNumber, _ := part[rule.Category]
 				if rule.ComparisonOperator == '<' {
 					if partNumber < rule.ComparisonValue {
-						currentWorkflow = rule.Target
+						WorkflowName = rule.Target
 						break
 					}
 				} else {
 					if partNumber > rule.ComparisonValue {
-						currentWorkflow = rule.Target
+						WorkflowName = rule.Target
 						break
 					}
 				}
 			} else {
-				currentWorkflow = rule.Target
+				WorkflowName = rule.Target
 			}
 		}
 	}
-	return currentWorkflow == "A"
+	return WorkflowName == "A"
 }
 
 func parseRule(rawRule string) Rule {
@@ -149,4 +194,90 @@ func parsePart(part string) map[rune]int {
 		}
 	}
 	return partMap
+}
+
+func getNextNodes(workflows map[string][]Rule, current SearchNode) []SearchNode {
+	nextNodes := []SearchNode{}
+	var next SearchNode
+	for _, rule := range workflows[current.WorkflowName] {
+		if rule.hasComparison() {
+			currentRange, _ := current.Ranges[rule.Category]
+			currentMin, currentMax := currentRange[0], currentRange[1]
+			min, max := currentMin, currentMax
+
+			if rule.ComparisonOperator == '<' {
+				if currentMin < rule.ComparisonValue {
+					if rule.ComparisonValue-1 < currentMax {
+						max = rule.ComparisonValue - 1
+					}
+					nextRanges := current.CopyRanges()
+					nextRanges[rule.Category] = [2]int{currentMin, max}
+					next = SearchNode{
+						WorkflowName: rule.Target,
+						Ranges:       nextRanges,
+					}
+					nextNodes = append(nextNodes, next)
+
+					if rule.ComparisonValue <= currentMax {
+						current.Ranges[rule.Category] = [2]int{rule.ComparisonValue, currentMax}
+					} else {
+						break
+					}
+				}
+
+			} else if rule.ComparisonOperator == '>' {
+				if currentMax > rule.ComparisonValue {
+					if rule.ComparisonValue+1 > currentMin {
+						min = rule.ComparisonValue + 1
+					}
+					nextRanges := current.CopyRanges()
+					nextRanges[rule.Category] = [2]int{min, currentMax}
+					next = SearchNode{
+						WorkflowName: rule.Target,
+						Ranges:       nextRanges,
+					}
+
+					nextNodes = append(nextNodes, next)
+					if rule.ComparisonValue >= currentMin {
+						current.Ranges[rule.Category] = [2]int{currentMin, rule.ComparisonValue}
+					} else {
+						break
+					}
+				}
+			}
+		} else {
+			next = SearchNode{
+				WorkflowName: rule.Target,
+				Ranges:       current.Ranges,
+			}
+			nextNodes = append(nextNodes, next)
+		}
+	}
+	return nextNodes
+}
+
+func findAcceptedRanges(workflows map[string][]Rule) []map[rune][2]int {
+	acceptedRanges := []map[rune][2]int{}
+	initialNode := SearchNode{
+		WorkflowName: "in",
+		Ranges: map[rune][2]int{
+			'x': {1, 4000},
+			'm': {1, 4000},
+			'a': {1, 4000},
+			's': {1, 4000},
+		},
+	}
+	frontier := []SearchNode{initialNode}
+	for len(frontier) > 0 {
+		current := frontier[len(frontier)-1]
+		frontier = frontier[:len(frontier)-1]
+		for _, node := range getNextNodes(workflows, current) {
+			if node.WorkflowName == "A" {
+				acceptedRanges = append(acceptedRanges, node.Ranges)
+			} else if node.WorkflowName != "R" {
+				frontier = append(frontier, node)
+			}
+		}
+	}
+	return acceptedRanges
 }
