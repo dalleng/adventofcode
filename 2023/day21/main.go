@@ -25,6 +25,11 @@ func main() {
 		 2. Borders are free.
 		 3. The horizontal and vertical lines that go through the center are free.
 		 4. S, the start, is always in the center of the grid.
+		 5. The total numbers of steps 26501365 = 202,300 * 131 + 65.
+
+		 Explanation of the geometric solution for Part 2
+
+		- https://advent-of-code.xavd.id/writeups/2023/day/21/
 	*/
 
 	f, err := os.Open("input.txt")
@@ -50,7 +55,31 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("s1=%d\n", len(tilesReachedInSteps(garden, Step{Position: start, StepCount: 0}, 64)))
-	// fmt.Printf("s2=%d\n", tilesReachedInSteps(garden, start, 5000, true))
+
+	steps := 26501365
+	n := steps / len(garden[0])
+
+	reachedOdd := tilesReachedInSteps(garden, Step{Position: start, StepCount: 0}, steps)
+	reachedEven := tilesReachedInSteps(garden, Step{Position: start, StepCount: 1}, steps)
+	nReachedOdd := len(reachedOdd)
+	nReachedEven := len(reachedEven)
+
+	nReachedOddCorner := 0
+	for _, distance := range reachedOdd {
+		if distance > len(garden[0])/2 {
+			nReachedOddCorner++
+		}
+	}
+
+	nReachedEvenCorner := 0
+	for _, distance := range reachedEven {
+		if distance > len(garden[0])/2 {
+			nReachedEvenCorner++
+		}
+	}
+
+	s2 := (n+1)*(n+1)*nReachedOdd + n*n*nReachedEven + n*nReachedEvenCorner - (n+1)*nReachedOddCorner
+	fmt.Printf("s2=%d\n", s2)
 }
 
 func getNextPositions(garden []string, start [2]int) [][2]int {
